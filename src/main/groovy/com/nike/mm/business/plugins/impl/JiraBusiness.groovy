@@ -102,7 +102,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             def final jiraQuery = "project=$projectName AND updatedDate>" + fromDate.getTime() + " order by updatedDate " +
                     "asc"
             def final query = [jql: jiraQuery, expand: "changelog", startAt: 0, maxResults: 100, fields: "*all"]
-            def final proxyDto = [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto
+            def final proxyDto = configInfo.proxyUrl ? [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto : null
             final HttpRequestDto dto = [url: configInfo.url, path: path, query: query, credentials: configInfo.credentials,
                                   proxyDto: proxyDto] as HttpRequestDto
             recordsCount += this.updateProjectData(projectName, dto)
@@ -115,7 +115,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
 
     List<String> getProjects(final Object configInfo) {
         final def path = "/rest/api/2/project"
-        final def proxyDto = [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto
+        final def proxyDto = configInfo.proxyUrl ? [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto : null
         HttpRequestDto dto = [url: configInfo.url, path: path, query: [start: 0, limit: 300], credentials: configInfo
                 .credentials, proxyDto: proxyDto] as HttpRequestDto
         return this.jiraWsRepository.getProjectsList(dto)
