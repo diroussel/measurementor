@@ -66,4 +66,11 @@ class JiraHistory {
             indexAnalyzer = "standard",
             store = true)
     String dataType
+
+    @Field(type = FieldType.String,
+            index = FieldIndex.analyzed,
+            searchAnalyzer = "standard",
+            indexAnalyzer = "standard",
+            store = true)
+    String issueType
 }

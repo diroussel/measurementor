@@ -162,6 +162,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         //TODO - need a way to figure out estimates based on input
         final def estimateHealth = this.utilitiesService.estimateHealth(otherItemsDto.storyPoints, leadTimeDevTimeDto
                 .devTime, 13, 9, [1, 2, 3, 5, 8, 13])
+        final def recidivism = (changelogHistoryItemDto.moveForward) ?
+                (25 - (changelogHistoryItemDto.moveBackward / (changelogHistoryItemDto.moveBackward + changelogHistoryItemDto.moveForward) * 50)) : null;
 
         def jiraData = this.jiraEsRepository.findOne(i.key)
         if (jiraData) {
@@ -169,6 +171,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             jiraData.issuetype = otherItemsDto.issueType
             jiraData.movedForward = changelogHistoryItemDto.moveForward
             jiraData.movedBackward = changelogHistoryItemDto.moveBackward
+            jiraData.recidivism = recidivism
+            jiraData.fixedVersions = i.fields.fixVersions.name
             jiraData.storyPoints = otherItemsDto.storyPoints
             jiraData.finished = this.utilitiesService.cleanJiraDate(i.fields.resolutiondate)
             jiraData.assignees = changelogHistoryItemDto.assignees
@@ -190,6 +194,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                     issuetype        : otherItemsDto.issueType,
                     movedForward     : changelogHistoryItemDto.moveForward,
                     movedBackward    : changelogHistoryItemDto.moveBackward,
+                    recidivism       : recidivism,
+                    fixedVersions    : i.fields.fixVersions*.name,
                     storyPoints      : otherItemsDto.storyPoints,
                     finished         : this.utilitiesService.cleanJiraDate(i.fields.resolutiondate),
                     assignees        : changelogHistoryItemDto.assignees,

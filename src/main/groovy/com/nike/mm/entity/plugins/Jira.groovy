@@ -71,6 +71,16 @@ class Jira {
 			searchAnalyzer = "standard",
 			indexAnalyzer = "standard",
 			store = true)
+	Integer recidivism
+
+	@Field(type = FieldType.Auto)
+	String[] fixedVersions
+
+	@Field(type = FieldType.Integer,
+			index = FieldIndex.analyzed,
+			searchAnalyzer = "standard",
+			indexAnalyzer = "standard",
+			store = true)
 	int storyPoints
 
 	@Field(type = FieldType.String,
