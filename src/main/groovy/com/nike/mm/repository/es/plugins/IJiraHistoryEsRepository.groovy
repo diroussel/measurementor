@@ -8,4 +8,6 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  */
 interface IJiraHistoryEsRepository extends ElasticsearchRepository<JiraHistory, String> {
 
+    public JiraHistory findByKeyAndNewValue(String key, String newValue)
+
 }

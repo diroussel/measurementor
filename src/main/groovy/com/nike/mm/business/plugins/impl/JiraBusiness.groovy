@@ -105,7 +105,9 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             def final proxyDto = configInfo.proxyUrl ? [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto : null
             final HttpRequestDto dto = [url: configInfo.url, path: path, query: query, credentials: configInfo.credentials,
                                   proxyDto: proxyDto] as HttpRequestDto
-            recordsCount += this.updateProjectData(projectName, dto)
+
+
+            recordsCount += this.updateProjectData(projectName, dto, configInfo.projectConfigs[projectName])
         }
 
         final def jobResponseDto = new JobRunResponseDto(type: type(), status: JobHistory.Status.success, recordsCount:
@@ -130,14 +132,13 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         if (json && json.issues && json.issues?.size() > 0) {
             keepGoing = true
             json.issues.each { def i ->
-
+                final OtherItemsDto otherItemsDto = new OtherItemsDto(i)
                 ChangelogHistoryItemDto changelogHistoryItemDto = new ChangelogHistoryItemDto()
                 if (i.changelog) {
-                    changelogHistoryItemDto = new ChangelogHistoryItemDto(i, projectConfig.taskStatusMap)
+                    changelogHistoryItemDto = new ChangelogHistoryItemDto(i, projectConfig.taskStatusMap, otherItemsDto.issueType)
                 }
                 final LeadTimeDevTimeDto leadTimeDevTimeDto = new LeadTimeDevTimeDto(i, changelogHistoryItemDto
                         .movedToDevList.min())
-                final OtherItemsDto otherItemsDto = new OtherItemsDto(i)
                 this.saveJiraData(projectName, i, changelogHistoryItemDto, leadTimeDevTimeDto, otherItemsDto)
                 updatedRecordsCount++
             }
@@ -277,7 +278,22 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
          * In the event that we have changelog infomation.
          * @param i - The json array from the result list.
          */
-        ChangelogHistoryItemDto(final def i, final def taskStatusMap) {
+        ChangelogHistoryItemDto(final def i, final def taskStatusMap, final def issueType) {
+
+            // add default create entry
+            def openEntry = JiraBusiness.this.jiraHistoryEsRepository.findByKeyAndNewValue(i.key, "Open")
+            if (!openEntry) {
+                def firstHistory = [
+                        dataType : "PTS",
+                        timestamp: JiraBusiness.this.utilitiesService.cleanJiraDate(i.fields.created),
+                        changeField: "status",
+                        newValue : "Open",
+                        changedBy: JiraBusiness.this.utilitiesService.cleanEmail(i.fields.creator?.emailAddress),
+                        key      : i.key,
+                        issueType: issueType
+                ] as JiraHistory
+                JiraBusiness.this.jiraHistoryEsRepository.save(firstHistory)
+            }
 
             for (def h : i.changelog.histories) {
                 for (def t : h.items) {
