@@ -169,7 +169,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         def jiraData = this.jiraEsRepository.findOne(i.key)
         if (jiraData) {
             jiraData.createdBy = this.utilitiesService.cleanEmail(i.fields.creator?.emailAddress)
-            jiraData.issuetype = otherItemsDto.issueType
+            jiraData.issueType = otherItemsDto.issueType
             jiraData.movedForward = changelogHistoryItemDto.moveForward
             jiraData.movedBackward = changelogHistoryItemDto.moveBackward
             jiraData.recidivism = recidivism
@@ -192,7 +192,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                     key              : i.key,
                     created          : this.utilitiesService.cleanJiraDate(i.fields.created),
                     createdBy        : this.utilitiesService.cleanEmail(i.fields.creator?.emailAddress),
-                    issuetype        : otherItemsDto.issueType,
+                    issueType        : otherItemsDto.issueType,
                     movedForward     : changelogHistoryItemDto.moveForward,
                     movedBackward    : changelogHistoryItemDto.moveBackward,
                     recidivism       : recidivism,
