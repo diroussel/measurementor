@@ -102,10 +102,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             def final jiraQuery = "project=$projectName AND updatedDate>" + fromDate.getTime() + " order by updatedDate " +
                     "asc"
             def final query = [jql: jiraQuery, expand: "changelog", startAt: 0, maxResults: 100, fields: "*all"]
-            def final proxyDto = configInfo.proxyUrl ? [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto : null
             final HttpRequestDto dto = [url: configInfo.url, path: path, query: query, credentials: configInfo.credentials,
-                                  proxyDto: proxyDto] as HttpRequestDto
-
+                                  proxyDto: this.getProxyDto(configInfo)] as HttpRequestDto
 
             recordsCount += this.updateProjectData(projectName, dto, configInfo.projectConfigs[projectName])
         }
@@ -115,11 +113,18 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         return jobResponseDto
     }
 
+    ProxyDto getProxyDto(Object configInfo) {
+        def proxyDto = [] as ProxyDto
+        if (configInfo.hasProperty("proxyUrl")) {
+            proxyDto = [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto
+        }
+        return proxyDto
+    }
     List<String> getProjects(final Object configInfo) {
         final def path = "/rest/api/2/project"
-        final def proxyDto = configInfo.proxyUrl ? [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto : null
+
         HttpRequestDto dto = [url: configInfo.url, path: path, query: [start: 0, limit: 300], credentials: configInfo
-                .credentials, proxyDto: proxyDto] as HttpRequestDto
+                .credentials, proxyDto: this.getProxyDto(configInfo)] as HttpRequestDto
         return this.jiraWsRepository.getProjectsList(dto)
     }
 
@@ -315,13 +320,18 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
 
                     //not sure we care about updates
                     if (history == null) {
+                        String emailAddress = null
+                        if (h.author?.emailAddress) {
+                            emailAddress = h.author.emailAddress
+                        }
+                        emailAddress = JiraBusiness.this.utilitiesService.cleanEmail(emailAddress)
                         history = new JiraHistory(
                                 dataType   : "PTS",
                                 sourceId   : h.id,
                                 timestamp  : JiraBusiness.this.utilitiesService.cleanJiraDate(h.created),
                                 changeField: t.field,
                                 newValue   : t.toString,
-                                changedBy  : h.author.emailAddress,
+                                changedBy  : emailAddress,
                                 key        : i.key)
                         JiraBusiness.this.jiraHistoryEsRepository.save(history)
                     }

@@ -9,11 +9,21 @@ mm:
             name: elasticsearch
     plugin:
         defaultStartDate: 08/07/2015
-
 eureka:
     client:
         enabled: false
-
 spring:
     application:
         name: measurementor
+---
+spring:
+    profiles: vagrant
+mm:
+    elasticsearch:
+        embedded: false
+---
+spring:
+    profiles: docker
+mm:
+    elasticsearch:
+        embedded: false

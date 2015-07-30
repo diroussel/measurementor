@@ -7,9 +7,19 @@ apply from: file('conf/gradle/check.gradle')
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
+
+test {
+    systemProperties System.properties
+}
+
+bootRun {
+    systemProperties System.properties
+}
+
 buildscript {
     ext {
-        springBootVersion = '1.2.3.RELEASE'
+        springBootVersion   = '1.2.3.RELEASE'
+        dockerPluginVersion = '1.2'
     }
     repositories {
         maven  {
@@ -18,11 +28,27 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath("se.transmode.gradle:gradle-docker:${dockerPluginVersion}")
         classpath("org.springframework:springloaded:1.2.3.RELEASE")
     }
 }
 
+group = 'measurementor'
+
 apply plugin: 'spring-boot'
+apply plugin: 'docker'
+
+task buildDocker(type: Docker) {
+  push = false
+  applicationName = jar.baseName
+  dockerfile = file('src/main/docker/Dockerfile')
+  doFirst {
+    copy {
+      from jar
+      into stageDir
+    }
+  }
+}
 
 springBoot {
     mainClass = 'com.nike.mm.MeasurementorApplication'
@@ -50,7 +76,7 @@ configurations {
 }
 
 war {
-    from 'ui/dist'
+    from 'ui_dist'
 }
 
 task wrapper(type: Wrapper) {
@@ -88,16 +114,50 @@ task buildWebApp(type: Exec) {
 }
 
 task copyWebApp(type: Copy) {
-    from 'ui/dist'
+    from 'ui_dist'
     into 'src/main/webapp'
+}
+    
+/*
+ * Gets the version name from the Git
+ */
+def getVersionName = { ->
+    def command = "git rev-parse HEAD"
+    def stdout = new ByteArrayOutputStream()
+    def os = System.getProperty("os.name").toLowerCase()
+    if (!os.contains("windows")) {
+        exec {
+            executable "/bin/sh"
+            args "-c", command
+            standardOutput = stdout
+        }
+    } else {
+        exec {
+            executable "cmd"
+            args "/c", command
+            standardOutput = stdout;
+        }
+    }
+    return stdout.toString().trim()
+}
+
+task buildVersion << {
+    def revision = getVersionName()
+    file('src/main/webapp').mkdirs()
+    file('src/main/webapp/version.js').text = """var versionSettings = {
+    version: '${version}',
+    revision: '${revision}'
+}"""
+    println 'Git Revision: ' + revision
 }
 
 task cleanOutputFolders(type: Delete) {
     delete 'public', 'build', 'ui/dist', 'src/main/webapp'
 }
 
-tasks.buildWebApp.dependsOn installNpm, installBower
-tasks.copyWebApp.dependsOn buildWebApp
-tasks.war.dependsOn copyWebApp
+//tasks.buildWebApp.dependsOn installNpm, installBower
+//tasks.copyWebApp.dependsOn buildWebApp
+tasks.war.dependsOn copyWebApp, buildVersion
 tasks.run.dependsOn copyWebApp
+tasks.bootRun.dependsOn copyWebApp
 tasks.clean.dependsOn cleanOutputFolders
