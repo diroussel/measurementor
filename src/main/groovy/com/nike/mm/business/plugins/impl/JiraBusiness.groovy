@@ -193,6 +193,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             jiraData.estimateHealth = estimateHealth.result
             jiraData.components = otherItemsDto.components
             jiraData.product = otherItemsDto.product
+            jiraData.priority = i.fields.priority.name
         } else {
             jiraData = new Jira(
                     key              : i.key,
@@ -215,7 +216,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                     estimateHealth   : estimateHealth.result,
                     rawEstimateHealth: estimateHealth.raw,
                     components       : otherItemsDto.components,
-                    product          : otherItemsDto.product)
+                    product          : otherItemsDto.product,
+                    priority         : i.fields.priority.name)
         }
         this.jiraEsRepository.save(jiraData)
     }

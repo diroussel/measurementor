@@ -101,4 +101,8 @@ class Jira {
 	@Field(type = FieldType.String,
 			index = FieldIndex.not_analyzed)
 	String product
+
+	@Field(type = FieldType.String,
+			index = FieldIndex.not_analyzed)
+	String priority
 }
