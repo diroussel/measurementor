@@ -8,7 +8,8 @@ mm:
         cluster:
             name: elasticsearch
     plugin:
-        defaultStartDate: 08/07/2015
+        defaultStartDate: 08/07/2010
+
 eureka:
     client:
         enabled: false
