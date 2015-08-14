@@ -120,6 +120,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         }
         return proxyDto
     }
+
     List<String> getProjects(final Object configInfo) {
         final def path = "/rest/api/2/project"
 
@@ -169,7 +170,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         final def estimateHealth = this.utilitiesService.estimateHealth(otherItemsDto.storyPoints, leadTimeDevTimeDto
                 .devTime, 13, 9, [1, 2, 3, 5, 8, 13])
         final def recidivism = (changelogHistoryItemDto.moveForward) ?
-                (25 - (changelogHistoryItemDto.moveBackward / (changelogHistoryItemDto.moveBackward + changelogHistoryItemDto.moveForward) * 50)) : null;
+                (changelogHistoryItemDto.moveBackward / (changelogHistoryItemDto.moveBackward + changelogHistoryItemDto.moveForward) * 50) : null;
 
         def jiraData = this.jiraEsRepository.findOne(i.key)
         if (jiraData) {
@@ -277,7 +278,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         /**
          * Default constructor in the case that we have no change log information
          */
-        ChangelogHistoryItemDto() { }
+        ChangelogHistoryItemDto() {}
 
         /**
          * In the event that we have changelog infomation.
@@ -304,10 +305,13 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                 for (def t : h.items) {
                     //NOTE the following conditionals flatten history into stuff we can work with easier
                     if (t.field == "status") { //NOTE get the progression for churn
+                        // ignore equal values
                         if (taskStatusMap[t.fromString] > taskStatusMap[t.toString]) {
-                            this.moveBackward++
-                        } else {
-                            this.moveForward++
+                            // handle actual movement distance by status distance
+                            this.moveBackward += (taskStatusMap[t.fromString] - taskStatusMap[t.toString]).toInteger();
+                        } else if (taskStatusMap[t.fromString] < taskStatusMap[t.toString]) {
+                            // handle actual movement distance by status distance
+                            this.moveForward += (taskStatusMap[t.toString] - taskStatusMap[t.fromString]).toInteger();
                             this.movedToDevList.add(JiraBusiness.this.utilitiesService.cleanJiraDate(h.created))
                         }
                     } else if (t.field == "assignee") {
