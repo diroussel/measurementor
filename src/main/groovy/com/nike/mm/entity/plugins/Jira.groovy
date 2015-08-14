@@ -50,6 +50,10 @@ class Jira {
 			index = FieldIndex.analyzed)
 	String[] fixedVersions
 
+	@Field(type = FieldType.String,
+			index = FieldIndex.analyzed)
+	String[] affectsVersions
+
 	@Field(type = FieldType.Integer,
 			index = FieldIndex.not_analyzed)
 	int storyPoints

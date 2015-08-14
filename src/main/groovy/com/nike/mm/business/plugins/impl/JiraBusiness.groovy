@@ -179,7 +179,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             jiraData.movedForward = changelogHistoryItemDto.moveForward
             jiraData.movedBackward = changelogHistoryItemDto.moveBackward
             jiraData.recidivism = recidivism
-            jiraData.fixedVersions = i.fields.fixVersions.name
+            jiraData.fixedVersions = i.fields.fixVersions*.name
+            jiraData.affectsVersions = i.fields.versions*.name
             jiraData.storyPoints = otherItemsDto.storyPoints
             jiraData.finished = this.utilitiesService.cleanJiraDate(i.fields.resolutiondate)
             jiraData.assignees = changelogHistoryItemDto.assignees
@@ -204,6 +205,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                     movedBackward    : changelogHistoryItemDto.moveBackward,
                     recidivism       : recidivism,
                     fixedVersions    : i.fields.fixVersions*.name,
+                    affectsVersions  : i.fields.versions*.name,
                     storyPoints      : otherItemsDto.storyPoints,
                     finished         : this.utilitiesService.cleanJiraDate(i.fields.resolutiondate),
                     assignees        : changelogHistoryItemDto.assignees,
