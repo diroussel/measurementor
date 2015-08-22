@@ -34,6 +34,8 @@
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
 
+    <logger name="com.nike.mm" level="DEBUG" />
+
     <root level="INFO">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="RollingFile" />

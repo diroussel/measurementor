@@ -109,4 +109,16 @@ class Jira {
 	@Field(type = FieldType.String,
 			index = FieldIndex.not_analyzed)
 	String priority
+
+	@Field(type = FieldType.String,
+			index = FieldIndex.not_analyzed)
+	String resolution
+
+	@Field(type = FieldType.Integer,
+			index = FieldIndex.not_analyzed)
+	int estimate
+
+	@Field(type = FieldType.Integer,
+			index = FieldIndex.not_analyzed)
+	int timesReopened
 }

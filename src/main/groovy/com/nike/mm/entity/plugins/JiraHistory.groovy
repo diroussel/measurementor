@@ -46,4 +46,12 @@ class JiraHistory {
     @Field(type = FieldType.String,
             index = FieldIndex.not_analyzed)
     String issueType
+
+    @Field(type = FieldType.String,
+            index = FieldIndex.analyzed)
+    String[] fixedVersions
+
+    @Field(type = FieldType.String,
+            index = FieldIndex.analyzed)
+    String[] affectsVersions
 }

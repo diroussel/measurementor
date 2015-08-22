@@ -195,31 +195,37 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             jiraData.components = otherItemsDto.components
             jiraData.product = otherItemsDto.product
             jiraData.priority = i.fields.priority.name
+            jiraData.resolution = i.fields.resolution?.name
+            jiraData.estimate = otherItemsDto.estimateHours
+            jiraData.timesReopened = changelogHistoryItemDto.timesReopened
         } else {
             jiraData = new Jira(
-                    key              : i.key,
-                    created          : this.utilitiesService.cleanJiraDate(i.fields.created),
-                    createdBy        : this.utilitiesService.cleanEmail(i.fields.creator?.emailAddress),
-                    issueType        : otherItemsDto.issueType,
-                    movedForward     : changelogHistoryItemDto.moveForward,
-                    movedBackward    : changelogHistoryItemDto.moveBackward,
-                    recidivism       : recidivism,
-                    fixedVersions    : i.fields.fixVersions*.name,
-                    affectsVersions  : i.fields.versions*.name,
-                    storyPoints      : otherItemsDto.storyPoints,
-                    finished         : this.utilitiesService.cleanJiraDate(i.fields.resolutiondate),
-                    assignees        : changelogHistoryItemDto.assignees,
-                    tags             : i.fields.labels,
-                    dataType         : "PTS",
-                    leadTime         : leadTimeDevTimeDto.leadTime,
-                    devTime          : leadTimeDevTimeDto.devTime,
-                    commentCount     : i.fields.comment?.total,
-                    jiraProject      : projectName,
-                    estimateHealth   : estimateHealth.result,
+                    key: i.key,
+                    created: this.utilitiesService.cleanJiraDate(i.fields.created),
+                    createdBy: this.utilitiesService.cleanEmail(i.fields.creator?.emailAddress),
+                    issueType: otherItemsDto.issueType,
+                    movedForward: changelogHistoryItemDto.moveForward,
+                    movedBackward: changelogHistoryItemDto.moveBackward,
+                    recidivism: recidivism,
+                    fixedVersions: i.fields.fixVersions*.name,
+                    affectsVersions: i.fields.versions*.name,
+                    storyPoints: otherItemsDto.storyPoints,
+                    finished: this.utilitiesService.cleanJiraDate(i.fields.resolutiondate),
+                    assignees: changelogHistoryItemDto.assignees,
+                    tags: i.fields.labels,
+                    dataType: "PTS",
+                    leadTime: leadTimeDevTimeDto.leadTime,
+                    devTime: leadTimeDevTimeDto.devTime,
+                    commentCount: i.fields.comment?.total,
+                    jiraProject: projectName,
+                    estimateHealth: estimateHealth.result,
                     rawEstimateHealth: estimateHealth.raw,
-                    components       : otherItemsDto.components,
-                    product          : otherItemsDto.product,
-                    priority         : i.fields.priority.name)
+                    components: otherItemsDto.components,
+                    product: otherItemsDto.product,
+                    priority: i.fields.priority.name,
+                    resolution: i.fields.resolution?.name,
+                    estimate: otherItemsDto.estimateHours,
+                    timesReopened: changelogHistoryItemDto.timesReopened)
         }
         this.jiraEsRepository.save(jiraData)
     }
@@ -229,12 +235,14 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         List components = []
         String product = ""
         Integer storyPoints = 0
+        Integer estimateHours = 0
 
         OtherItemsDto(final def i) {
             this.issueType = this.getIssueType(i)
             this.components = this.getComponentsList(i)
             this.product = this.getProductString(i)
             this.storyPoints = this.getStoryPoints(i)
+            this.estimateHours = this.getEstimateHours(i)
         }
 
         String getIssueType(final def i) {
@@ -271,11 +279,20 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             }
             return storyPoints;
         }
+
+        Integer getEstimateHours(final def i) {
+            def estimateHours = 0
+            if (i.fields.timeestimate) {
+                estimateHours = i.fields.timeestimate.toInteger() / 3600
+            }
+            return estimateHours;
+        }
     }
 
     class ChangelogHistoryItemDto {
         def moveForward = 0
         def moveBackward = 0
+        def timesReopened = 0
         def assignees = []
         def movedToDevList = []
 
@@ -294,29 +311,49 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             def openEntry = JiraBusiness.this.jiraHistoryEsRepository.findByKeyAndNewValue(i.key, "Open")
             if (!openEntry) {
                 def firstHistory = [
-                        dataType : "PTS",
-                        timestamp: JiraBusiness.this.utilitiesService.cleanJiraDate(i.fields.created),
+                        dataType   : "PTS",
+                        timestamp  : JiraBusiness.this.utilitiesService.cleanJiraDate(i.fields.created),
                         changeField: "status",
-                        newValue : "Open",
-                        changedBy: JiraBusiness.this.utilitiesService.cleanEmail(i.fields.creator?.emailAddress),
-                        key      : i.key,
-                        issueType: issueType
+                        newValue   : "Open",
+                        changedBy  : JiraBusiness.this.utilitiesService.cleanEmail(i.fields.creator?.emailAddress),
+                        key        : i.key,
+                        issueType  : issueType,
+                        fixedVersions: i.fields.fixVersions*.name,
+                        affectsVersions: i.fields.versions*.name
                 ] as JiraHistory
                 JiraBusiness.this.jiraHistoryEsRepository.save(firstHistory)
             }
 
+            def boolean reopenedAutomatically = false;
+            def int stateBeforeAutoReopen = 0;
             for (def h : i.changelog.histories) {
                 for (def t : h.items) {
                     //NOTE the following conditionals flatten history into stuff we can work with easier
-                    if (t.field == "status") { //NOTE get the progression for churn
-                        // ignore equal values
-                        if (taskStatusMap[t.fromString] > taskStatusMap[t.toString]) {
-                            // handle actual movement distance by status distance
-                            this.moveBackward += (taskStatusMap[t.fromString] - taskStatusMap[t.toString]).toInteger();
-                        } else if (taskStatusMap[t.fromString] < taskStatusMap[t.toString]) {
-                            // handle actual movement distance by status distance
-                            this.moveForward += (taskStatusMap[t.toString] - taskStatusMap[t.fromString]).toInteger();
-                            this.movedToDevList.add(JiraBusiness.this.utilitiesService.cleanJiraDate(h.created))
+                    if (t.field == "status") {
+                        //NOTE get the progression for churn
+                        // ignore reopen by opding user
+                        if (taskStatusMap[t.toString] == 1) {
+                            if (h.author.name == "opdingbuild") {
+                                reopenedAutomatically = true
+                                stateBeforeAutoReopen = taskStatusMap[t.fromString]
+                                continue;
+                            } else {
+                                reopenedAutomatically = false
+                                this.timesReopened++
+                            }
+                        }
+                        if (!reopenedAutomatically || taskStatusMap[t.fromString] == stateBeforeAutoReopen) {
+                            // ignore equal values
+                            if (taskStatusMap[t.fromString] > taskStatusMap[t.toString]) {
+                                // handle actual movement distance by status distance
+                                this.moveBackward += (taskStatusMap[t.fromString] - taskStatusMap[t.toString]).toInteger()
+                            } else if (taskStatusMap[t.fromString] < taskStatusMap[t.toString]) {
+                                // handle actual movement distance by status distance
+                                this.moveForward += (taskStatusMap[t.toString] - taskStatusMap[t.fromString]).toInteger()
+                                this.movedToDevList.add(JiraBusiness.this.utilitiesService.cleanJiraDate(h.created))
+                            }
+                        } else {
+                            continue;
                         }
                     } else if (t.field == "assignee") {
                         //NOTE get everyone that worked on this issue, or at least was assigned to it
@@ -331,6 +368,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                         String emailAddress = null
                         if (h.author?.emailAddress) {
                             emailAddress = h.author.emailAddress
+                        } else if (h.author?.name) {
+                            emailAddress = h.author.name
                         }
                         emailAddress = JiraBusiness.this.utilitiesService.cleanEmail(emailAddress)
                         history = new JiraHistory(
@@ -340,7 +379,10 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                                 changeField: t.field,
                                 newValue   : t.toString,
                                 changedBy  : emailAddress,
-                                key        : i.key)
+                                key        : i.key,
+                                issueType  : issueType,
+                                fixedVersions: i.fields.fixVersions*.name,
+                                affectsVersions: i.fields.versions*.name)
                         JiraBusiness.this.jiraHistoryEsRepository.save(history)
                     }
                 }
