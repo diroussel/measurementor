@@ -45,11 +45,11 @@ abstract class AbstractBusiness implements IMeasureMentorBusiness {
         sb.toString()
     }
 
-    def getProxyDto(final Object configInfo) {
-        def rproxy = [] as ProxyDto
-        if (configInfo.proxyUrl) {
-            rproxy = [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto
+    ProxyDto getProxyDto(Object configInfo) {
+        def proxyDto = [] as ProxyDto
+        if (configInfo.hasProperty("proxyUrl")) {
+            proxyDto = [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto
         }
-        return rproxy
+        return proxyDto
     }
 }

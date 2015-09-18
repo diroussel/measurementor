@@ -72,12 +72,9 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             validationErrors.add(MISSING_CREDENTIALS)
         }
         if (config.proxyUrl) {
-//            validationErrors.add(MISSING_PROXY_URL)
-//        }
             if (!config.proxyPort) {
                 validationErrors.add(MISSING_PROXY_PORT)
             } else {
-//        if (config.proxyPort) {
                 if (!config.proxyPort.toString().isInteger() || (0 >= config.proxyPort.toString().toInteger())) {
                     validationErrors.add(INVALID_PROXY_PORT)
                 }
@@ -113,14 +110,6 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         return jobResponseDto
     }
 
-    ProxyDto getProxyDto(Object configInfo) {
-        def proxyDto = [] as ProxyDto
-        if (configInfo.hasProperty("proxyUrl")) {
-            proxyDto = [url: configInfo.proxyUrl, port: configInfo.proxyPort] as ProxyDto
-        }
-        return proxyDto
-    }
-
     List<String> getProjects(final Object configInfo) {
         final def path = "/rest/api/2/project"
 
@@ -154,8 +143,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         }
 
         if (keepGoing) {
-            log.debug("NEXT PAGE starting at $dto.query.startAt")
             dto.query.startAt += dto.query.maxResults
+            log.debug("NEXT PAGE starting at $dto.query.startAt")
             updatedRecordsCount += this.updateProjectData(projectName, dto, projectConfig)
         }
         return updatedRecordsCount
