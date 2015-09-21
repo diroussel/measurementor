@@ -9,7 +9,8 @@ mm:
             name: elasticsearch
     plugin:
         defaultStartDate: 08/07/2010
-
+server:
+    port: 7070
 eureka:
     client:
         enabled: false
