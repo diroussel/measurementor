@@ -405,9 +405,13 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                     endLeadTime = fin
                 }
                 final long duration = endLeadTime.getTime() - movedToDev.getTime()
-                devTime = TimeUnit.MILLISECONDS.toDays(duration)
+                devTime = TimeUnit.MILLISECONDS.toHours(duration)
                 if (devTime == 0) {
                     devTime = 1
+                } else if (devTime > 8) {
+                    // more than a working day reduce to a maximum of 8 hours per 24 h
+                    devTime = Math.ceil((devTime / 24) * 8)
+                    devTime = devTime < 8 ? 8 : devTime
                 }
             }
         }
