@@ -29,7 +29,7 @@ buildscript {
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath("se.transmode.gradle:gradle-docker:${dockerPluginVersion}")
-        classpath("org.elasticsearch:elasticsearch:1.4.4")
+        classpath("org.elasticsearch:elasticsearch:1.7.2")
         classpath("org.springframework:springloaded:1.2.3.RELEASE")
     }
 }

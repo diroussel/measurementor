@@ -56,7 +56,8 @@ class RepositoryConfig {
     @Bean
     public Client client(){
         if(elasticsearchEmbedded) {
-            return new NodeBuilder().local(true).node().client();
+            Settings settings = ImmutableSettings.settingsBuilder().put("script.groovy.sandbox.enabled", true).build();
+            return new NodeBuilder().local(true).settings(settings).node().client();
         }
         Settings settings = ImmutableSettings.settingsBuilder().put('cluster.name', elasticsearchClusterName).build();
         TransportClient client= new TransportClient(settings);
