@@ -8,4 +8,6 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 public interface IJiraEsRepository extends ElasticsearchRepository<Jira, Long> {
 
     Page<Jira> findByJiraProject(String jiraProject, Pageable pageable);
+
+    Jira findByKey(String key);
 }

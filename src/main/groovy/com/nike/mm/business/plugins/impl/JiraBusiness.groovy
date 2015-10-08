@@ -161,7 +161,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         final def recidivism = (changelogHistoryItemDto.moveForward) ?
                 (changelogHistoryItemDto.moveBackward / (changelogHistoryItemDto.moveBackward + changelogHistoryItemDto.moveForward) * 50) : null;
 
-        def jiraData = this.jiraEsRepository.findOne(i.key)
+        def jiraData = this.jiraEsRepository.findByKey(i.key)
         if (jiraData) {
             jiraData.createdBy = this.utilitiesService.cleanEmail(i.fields.creator?.emailAddress)
             jiraData.issueType = otherItemsDto.issueType
@@ -297,8 +297,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         ChangelogHistoryItemDto(final def i, final def taskStatusMap, final def issueType) {
 
             // add default create entry
-            def openEntry = JiraBusiness.this.jiraHistoryEsRepository.findByKeyAndNewValue(i.key, "Open")
-            if (!openEntry) {
+            def openEntries = JiraBusiness.this.jiraHistoryEsRepository.findByKeyAndNewValue(i.key, "Open")
+            if (openEntries.isEmpty()) {
                 def firstHistory = [
                         dataType   : "PTS",
                         timestamp  : JiraBusiness.this.utilitiesService.cleanJiraDate(i.fields.created),
@@ -350,9 +350,9 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                             this.assignees.add(JiraBusiness.this.utilitiesService.makeNonTokenFriendly(t.toString))
                         }
                     }
-                    def history = JiraBusiness.this.jiraHistoryEsRepository.findOne(h.id)
 
-                    //not sure we care about updates
+                    def history = JiraBusiness.this.jiraHistoryEsRepository.findByKeyAndSourceId(i.key, h.id)
+                    //no updates for history entries
                     if (history == null) {
                         String emailAddress = null
                         if (h.author?.emailAddress) {
