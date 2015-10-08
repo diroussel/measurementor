@@ -124,13 +124,9 @@ class GerritBusiness extends AbstractBusiness implements IGerritBusiness {
     }
 
     def saveGerritData(final ChangeInfo changeInfo, final ReviewLogDto reviewLog) {
-        def gerritData = this.gerritChangeRepository.findOne(changeInfo._number.toString())
+        def gerritData = this.gerritChangeRepository.findByGerritId(changeInfo._number)
         if (gerritData) {
-            gerritData.id = changeInfo._number.toString()
-            gerritData.created = new Date(changeInfo.created.time)
             gerritData.lastUpdated = new Date(changeInfo.updated.time)
-            gerritData.projectName = changeInfo.project
-            gerritData.branch = changeInfo.branch
             gerritData.numberOfPatchSets = changeInfo.revisions.size()
             gerritData.totalReviewTimeHours = reviewLog.totalReviewTimeHours
         } else {
@@ -140,7 +136,7 @@ class GerritBusiness extends AbstractBusiness implements IGerritBusiness {
                 jiraKey = jiraKeyMatcher[0][1]
             }
             gerritData = new GerritChange(
-                    id: changeInfo._number.toString(),
+                    gerritId: changeInfo._number,
                     created: new Date(changeInfo.created.time),
                     lastUpdated: new Date(changeInfo.updated.time),
                     projectName: changeInfo.project,

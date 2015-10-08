@@ -10,4 +10,6 @@ interface IGerritChangeRepository extends ElasticsearchRepository<GerritChange, 
 
     Page<GerritChange> findByProjectName(String projectName, Pageable pageable);
 
+    GerritChange findByGerritId(Integer gerritId);
+
 }

@@ -14,6 +14,10 @@ class GerritChange {
             index = FieldIndex.not_analyzed)
     String id
 
+    @Field(type = FieldType.Integer,
+            index = FieldIndex.not_analyzed)
+    Integer gerritId;
+
     @Field(type = FieldType.Date,
             index = FieldIndex.not_analyzed)
     Date created
