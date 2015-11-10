@@ -176,7 +176,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             jiraData.tags = i.fields.labels
             jiraData.dataType = "PTS"
             jiraData.leadTime = leadTimeDevTimeDto.leadTime
-            jiraData.devTime = leadTimeDevTimeDto.devTime
+            jiraData.devTime = leadTimeDevTimeDto.devTime > 1 ? leadTimeDevTimeDto.devTime : otherItemsDto.estimateHours
             jiraData.commentCount = i.fields.comment?.total
             jiraData.jiraProject = projectName
             jiraData.rawEstimateHealth = estimateHealth.raw
@@ -204,7 +204,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                     tags: i.fields.labels,
                     dataType: "PTS",
                     leadTime: leadTimeDevTimeDto.leadTime,
-                    devTime: leadTimeDevTimeDto.devTime,
+                    devTime: leadTimeDevTimeDto.devTime > 1 ? leadTimeDevTimeDto.devTime : otherItemsDto.estimateHours,
                     commentCount: i.fields.comment?.total,
                     jiraProject: projectName,
                     estimateHealth: estimateHealth.result,
@@ -406,13 +406,6 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                 }
                 final long duration = endLeadTime.getTime() - movedToDev.getTime()
                 devTime = TimeUnit.MILLISECONDS.toHours(duration)
-                if (devTime == 0) {
-                    devTime = 1
-                } else if (devTime > 8) {
-                    // more than a working day reduce to a maximum of 8 hours per 24 h
-                    devTime = Math.ceil((devTime / 24) * 8)
-                    devTime = devTime < 8 ? 8 : devTime
-                }
             }
         }
     }
