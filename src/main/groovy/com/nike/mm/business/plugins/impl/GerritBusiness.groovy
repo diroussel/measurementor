@@ -128,10 +128,10 @@ class GerritBusiness extends AbstractBusiness implements IGerritBusiness {
         if (gerritData) {
             gerritData.lastUpdated = new Date(changeInfo.updated.time)
             gerritData.numberOfPatchSets = changeInfo.revisions.size()
-            gerritData.totalReviewTimeHours = reviewLog.totalReviewTimeHours
+            gerritData.totalReviewTimeMinutes = reviewLog.totalReviewTimeMinutes
         } else {
             def jiraKey = ""
-            def jiraKeyMatcher = (changeInfo.subject =~ "([A-Z]+-[0-9]+):.*")
+            def jiraKeyMatcher = (changeInfo.subject =~ "([A-Z]+-[0-9]+).*(:)?.*")
             if (jiraKeyMatcher.matches()) {
                 jiraKey = jiraKeyMatcher[0][1]
             }
@@ -143,7 +143,7 @@ class GerritBusiness extends AbstractBusiness implements IGerritBusiness {
                     branch: changeInfo.branch,
                     jiraKey: jiraKey,
                     numberOfPatchSets: changeInfo.revisions.size(),
-                    totalReviewTimeHours: reviewLog.totalReviewTimeHours
+                    totalReviewTimeMinutes: reviewLog.totalReviewTimeMinutes
 
             )
         }
@@ -156,7 +156,7 @@ class GerritBusiness extends AbstractBusiness implements IGerritBusiness {
         def reviewStartTime = [:]
         def reviewEndTime = [:]
         def totalReviewTime = 0
-        def totalReviewTimeHours = 0
+        def totalReviewTimeMinutes = 0
 
         ReviewLogDto(final def changeDetails) {
             changeDetails.messages.each { def m ->
@@ -178,14 +178,14 @@ class GerritBusiness extends AbstractBusiness implements IGerritBusiness {
                 }
             }
             if (totalReviewTime > 0) {
-                totalReviewTimeHours = TimeUnit.MILLISECONDS.toHours(totalReviewTime);
-                if (totalReviewTimeHours == 0) {
-                    totalReviewTimeHours = 1
-                } else if (totalReviewTimeHours > 8) {
-                    totalReviewTimeHours = 8
+                totalReviewTimeMinutes = TimeUnit.MILLISECONDS.toMinutes(totalReviewTime);
+                if (totalReviewTimeMinutes == 0) {
+                    totalReviewTimeMinutes = 30
+                } else if (totalReviewTimeMinutes > (8 * 60)) {
+                    totalReviewTimeMinutes = 8 * 60
                 }
             }
-            log.debug("Change-Number: $changeDetails._number, totalReviewTimeHours: $totalReviewTimeHours")
+            log.debug("Change-Number: $changeDetails._number, totalReviewTimeMinutes: $totalReviewTimeMinutes")
         }
     }
 

@@ -44,7 +44,7 @@ class GerritChange {
 
     @Field(type = FieldType.Integer,
             index = FieldIndex.not_analyzed)
-    Integer totalReviewTimeHours
+    Integer totalReviewTimeMinutes
 
 
 }
