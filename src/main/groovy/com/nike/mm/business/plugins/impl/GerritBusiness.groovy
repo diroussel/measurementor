@@ -179,11 +179,6 @@ class GerritBusiness extends AbstractBusiness implements IGerritBusiness {
             }
             if (totalReviewTime > 0) {
                 totalReviewTimeMinutes = TimeUnit.MILLISECONDS.toMinutes(totalReviewTime);
-                if (totalReviewTimeMinutes == 0) {
-                    totalReviewTimeMinutes = 30
-                } else if (totalReviewTimeMinutes > (8 * 60)) {
-                    totalReviewTimeMinutes = 8 * 60
-                }
             }
             log.debug("Change-Number: $changeDetails._number, totalReviewTimeMinutes: $totalReviewTimeMinutes")
         }
