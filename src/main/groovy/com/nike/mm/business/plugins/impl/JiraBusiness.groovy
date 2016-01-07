@@ -176,7 +176,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             jiraData.tags = i.fields.labels
             jiraData.dataType = "PTS"
             jiraData.leadTime = leadTimeDevTimeDto.leadTime
-            jiraData.devTime = leadTimeDevTimeDto.devTime > 1 ? leadTimeDevTimeDto.devTime : otherItemsDto.estimateHours
+            jiraData.devTime = leadTimeDevTimeDto.devTime >= 1 ? leadTimeDevTimeDto.devTime : otherItemsDto.estimateHours
             jiraData.commentCount = i.fields.comment?.total
             jiraData.jiraProject = projectName
             jiraData.rawEstimateHealth = estimateHealth.raw
@@ -204,7 +204,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                     tags: i.fields.labels,
                     dataType: "PTS",
                     leadTime: leadTimeDevTimeDto.leadTime,
-                    devTime: leadTimeDevTimeDto.devTime > 1 ? leadTimeDevTimeDto.devTime : otherItemsDto.estimateHours,
+                    devTime: leadTimeDevTimeDto.devTime >= 1 ? leadTimeDevTimeDto.devTime : otherItemsDto.estimateHours,
                     commentCount: i.fields.comment?.total,
                     jiraProject: projectName,
                     estimateHealth: estimateHealth.result,
@@ -224,7 +224,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
         List components = []
         String product = ""
         Integer storyPoints = 0
-        Integer estimateHours = 0
+        Float estimateHours = 0
 
         OtherItemsDto(final def i) {
             this.issueType = this.getIssueType(i)
@@ -269,8 +269,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             return storyPoints;
         }
 
-        Integer getEstimateHours(final def i) {
-            def estimateHours = 0
+        Float getEstimateHours(final def i) {
+            def Float estimateHours = 0
             if (i.fields.timeestimate) {
                 estimateHours = i.fields.timeestimate.toInteger() / 3600
             }
@@ -381,7 +381,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
 
     class LeadTimeDevTimeDto {
         def leadTime = 0
-        def devTime = 0
+        def Float devTime = 0
 
         LeadTimeDevTimeDto(final def i, final def movedToDev) {
             log.debug("Fields: " + i.fields.created)
@@ -405,7 +405,8 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                     endLeadTime = fin
                 }
                 final long duration = endLeadTime.getTime() - movedToDev.getTime()
-                devTime = TimeUnit.MILLISECONDS.toHours(duration)
+                // to get partial hours, toHours only returns full hours
+                devTime = TimeUnit.MILLISECONDS.toMinutes(duration) / 60.0
             }
         }
     }

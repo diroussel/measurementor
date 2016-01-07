@@ -78,7 +78,7 @@ class Jira {
 			index = FieldIndex.not_analyzed)
 	long leadTime
 
-	@Field(type = FieldType.Long,
+	@Field(type = FieldType.Float,
 			index = FieldIndex.not_analyzed)
 	long devTime
 
@@ -114,7 +114,7 @@ class Jira {
 			index = FieldIndex.not_analyzed)
 	String resolution
 
-	@Field(type = FieldType.Integer,
+	@Field(type = FieldType.Float,
 			index = FieldIndex.not_analyzed)
 	int estimate
 
