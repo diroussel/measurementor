@@ -7,7 +7,9 @@ import com.nike.mm.dto.GerritRequestDto
 import com.nike.mm.dto.JobRunResponseDto
 import com.nike.mm.entity.internal.JobHistory
 import com.nike.mm.entity.plugins.GerritChange
+import com.nike.mm.entity.plugins.Jira
 import com.nike.mm.repository.es.plugins.IGerritChangeRepository
+import com.nike.mm.repository.es.plugins.IJiraEsRepository
 import com.nike.mm.repository.ws.IGerritWsRepository
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,6 +45,9 @@ class GerritBusiness extends AbstractBusiness implements IGerritBusiness {
 
     @Autowired
     IGerritChangeRepository gerritChangeRepository;
+
+    @Autowired
+    IJiraEsRepository jiraEsRepository
 
     @Override
     String type() {
@@ -135,6 +140,7 @@ class GerritBusiness extends AbstractBusiness implements IGerritBusiness {
             if (jiraKeyMatcher.matches()) {
                 jiraKey = jiraKeyMatcher[0][1]
             }
+
             gerritData = new GerritChange(
                     gerritId: changeInfo._number,
                     created: new Date(changeInfo.created.time),
@@ -144,9 +150,24 @@ class GerritBusiness extends AbstractBusiness implements IGerritBusiness {
                     jiraKey: jiraKey,
                     numberOfPatchSets: changeInfo.revisions.size(),
                     totalReviewTimeMinutes: reviewLog.totalReviewTimeMinutes
-
             )
         }
+
+        // update linked related infos from Jira (there is no relation used in es)
+        if(gerritData.jiraKey) {
+            Jira jiraTask = jiraEsRepository.findByKey(gerritData.jiraKey)
+            if (jiraTask) {
+                gerritData.movedForward = jiraTask.movedForward
+                gerritData.movedBackward = jiraTask.movedBackward
+                gerritData.estimate =  jiraTask.estimate
+                gerritData.devTime =  jiraTask.devTime
+                gerritData.timesReopened = jiraTask.timesReopened
+                gerritData.fixedVersions = jiraTask.fixedVersions
+                gerritData.affectsVersions = jiraTask.affectsVersions
+                gerritData.resolution = jiraTask.resolution
+            }
+        }
+
         this.gerritChangeRepository.save(gerritData)
     }
 

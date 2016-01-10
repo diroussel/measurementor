@@ -46,5 +46,39 @@ class GerritChange {
             index = FieldIndex.not_analyzed)
     Integer totalReviewTimeMinutes
 
+    // from Jira
+
+    @Field(type = FieldType.Integer,
+            index = FieldIndex.not_analyzed)
+    int movedForward
+
+    @Field(type = FieldType.Integer,
+            index = FieldIndex.not_analyzed)
+    int movedBackward
+
+    @Field(type = FieldType.Float,
+            index = FieldIndex.not_analyzed)
+    int estimate
+
+    @Field(type = FieldType.Float,
+            index = FieldIndex.not_analyzed)
+    long devTime
+
+    @Field(type = FieldType.Integer,
+            index = FieldIndex.not_analyzed)
+    int timesReopened
+
+    @Field(type = FieldType.String,
+            index = FieldIndex.analyzed)
+    String[] fixedVersions
+
+    @Field(type = FieldType.String,
+            index = FieldIndex.analyzed)
+    String[] affectsVersions
+
+    @Field(type = FieldType.String,
+            index = FieldIndex.not_analyzed)
+    String resolution
+
 
 }
