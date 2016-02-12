@@ -176,7 +176,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
             jiraData.tags = i.fields.labels
             jiraData.dataType = "PTS"
             jiraData.leadTime = leadTimeDevTimeDto.leadTime
-            jiraData.devTime = leadTimeDevTimeDto.devTime >= 1 ? leadTimeDevTimeDto.devTime : otherItemsDto.estimateHours
+            jiraData.devTime = leadTimeDevTimeDto.devTime
             jiraData.commentCount = i.fields.comment?.total
             jiraData.jiraProject = projectName
             jiraData.rawEstimateHealth = estimateHealth.raw
@@ -204,7 +204,7 @@ class JiraBusiness extends AbstractBusiness implements IJiraBusiness {
                     tags: i.fields.labels,
                     dataType: "PTS",
                     leadTime: leadTimeDevTimeDto.leadTime,
-                    devTime: leadTimeDevTimeDto.devTime >= 1 ? leadTimeDevTimeDto.devTime : otherItemsDto.estimateHours,
+                    devTime: leadTimeDevTimeDto.devTime,
                     commentCount: i.fields.comment?.total,
                     jiraProject: projectName,
                     estimateHealth: estimateHealth.result,
